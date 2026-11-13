@@ -122,14 +122,14 @@
           <h2 class="text-sm font-black text-white flex items-center gap-2">
             <i class="fa-solid fa-key text-amber-400"></i> Enter Teacher Classroom Code
           </h2>
-          <p class="text-xs text-gray-400">Paste the assignment code shared by your teacher to unlock your homework quiz.</p>
+          <p class="text-xs text-gray-400">Paste the assignment code shared by your teacher or load the built-in curriculum test bank below.</p>
           <textarea id="studentCodeInput" rows="3" placeholder="Paste APEX-HW-... code here" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"></textarea>
           <div class="flex gap-2">
             <button onclick="loadHomeworkFromCode()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
               Unlock Assignment
             </button>
             <button onclick="loadDemoHomework()" class="px-3 py-2.5 rounded-xl bg-slate-800 text-gray-300 text-xs font-bold hover:text-white transition">
-              Try Sample Quiz
+              Load Curriculum Test Bank
             </button>
           </div>
         </div>
@@ -262,7 +262,7 @@
   </footer>
 
   <script>
-    // ==================== CURRICULUM DATA ====================
+    // ==================== CURRICULUM & LESSON DATA ====================
     const lessons = [
       {
         id: 1,
@@ -475,15 +475,18 @@
       alert('Classroom Homework Code copied! Share it with your students.');
     }
 
-    // ==================== STUDENT HOMEWORK DECODER ====================
+    // ==================== STUDENT HOMEWORK & TEST BANK ====================
     function loadDemoHomework() {
       const demo = {
-        s: "Mathematics",
-        t: "Algebra & Discriminant Check",
+        s: "Secondary Curriculum Test Bank",
+        t: "Midterm Comprehensive Assessment (Math & Science)",
         d: "Friday 5:00 PM",
         q: [
           { q: "What is the discriminant of ax² + bx + c = 0?", a: "b² - 4ac", b: "b² + 4ac", c: "2a / -b", ans: "A" },
-          { q: "If the discriminant is negative, how many real roots exist?", a: "Two", b: "Zero", c: "One", ans: "B" }
+          { q: "If the discriminant is negative, how many real roots exist?", a: "Two", b: "Zero", c: "One", ans: "B" },
+          { q: "What is Newton's First Law of Motion also known as?", a: "Law of Inertia", b: "Law of Gravity", c: "Conservation of Energy", ans: "A" },
+          { q: "Which rhetorical pillar establishes speaker credibility?", a: "Pathos", b: "Ethos", c: "Logos", ans: "B" },
+          { q: "In what century did the Industrial Revolution begin in Britain?", a: "Late 18th Century", b: "Early 20th Century", c: "15th Century", ans: "A" }
         ]
       };
       document.getElementById('studentCodeInput').value = 'APEX-HW-' + btoa(unescape(encodeURIComponent(JSON.stringify(demo))));
@@ -638,6 +641,7 @@ Verification ID: #${verifyHash}`;
     // Initialize defaults
     filterLessons('All');
     addQuestionField('Solve for x: 2x + 6 = 14', 'x = 4', 'x = 10', 'x = 3', 'A');
+    addQuestionField('What is the chemical formula for water?', 'H2O', 'CO2', 'NaCl', 'A');
   </script>
 </body>
 </html>
