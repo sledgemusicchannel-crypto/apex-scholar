@@ -295,7 +295,7 @@
     ];
 
     let currentSpeechRate = 1.0;
-    let scholarFallbackAudio = new Audio();
+    let currentUtterance = null;
     let activeQuizData = null;
     let timerInterval = null;
     let timeLeftSeconds = 25 * 60;
@@ -366,53 +366,43 @@
     }
 
     function playLessonAudio() {
-      stopLessonAudio();
-      const text = document.getElementById('lessonTitle').textContent + '. ' + document.getElementById('lessonBody').textContent;
-      document.getElementById('audioStatus').textContent = 'PLAYING';
-
-      const chunks = text.match(/.{1,180}(\s|$)/g) || [text];
-      let idx = 0;
-
-      function playNextChunk() {
-        if (idx >= chunks.length) {
-          document.getElementById('audioStatus').textContent = 'COMPLETED';
-          return;
-        }
-        const q = encodeURIComponent(chunks[idx].trim());
-        scholarFallbackAudio.src = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=en&q=${q}`;
-        scholarFallbackAudio.playbackRate = currentSpeechRate;
-        scholarFallbackAudio.onended = () => { idx++; playNextChunk(); };
-        scholarFallbackAudio.play().catch(() => {
-          document.getElementById('audioStatus').textContent = 'TAP TO PLAY';
-        });
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-Speech is not supported on this browser.');
+        return;
       }
-      playNextChunk();
+      window.speechSynthesis.cancel();
+      const text = document.getElementById('lessonTitle').textContent + '. ' + document.getElementById('lessonBody').textContent;
+      currentUtterance = new SpeechSynthesisUtterance(text);
+      currentUtterance.rate = currentSpeechRate;
+      currentUtterance.onstart = () => document.getElementById('audioStatus').textContent = 'PLAYING';
+      currentUtterance.onend = () => document.getElementById('audioStatus').textContent = 'COMPLETED';
+      window.speechSynthesis.speak(currentUtterance);
     }
 
     function pauseResumeAudio() {
-      if (!scholarFallbackAudio.paused && scholarFallbackAudio.src) {
-        scholarFallbackAudio.pause();
-        document.getElementById('audioStatus').textContent = 'PAUSED';
-      } else if (scholarFallbackAudio.paused && scholarFallbackAudio.src && scholarFallbackAudio.currentTime > 0) {
-        scholarFallbackAudio.play();
+      if (!('speechSynthesis' in window)) return;
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
         document.getElementById('audioStatus').textContent = 'PLAYING';
+      } else if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        document.getElementById('audioStatus').textContent = 'PAUSED';
       }
     }
 
     function stopLessonAudio() {
-      scholarFallbackAudio.pause();
-      scholarFallbackAudio.currentTime = 0;
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
       document.getElementById('audioStatus').textContent = 'STOPPED';
     }
 
     function setRate(rate) {
       currentSpeechRate = rate;
-      scholarFallbackAudio.playbackRate = rate;
       document.querySelectorAll('.rate-btn').forEach(btn => {
         btn.className = parseFloat(btn.textContent) === rate
           ? 'rate-btn px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-600 text-white'
           : 'rate-btn px-2 py-1 rounded-lg text-[10px] font-bold text-gray-400';
       });
+      if (window.speechSynthesis && window.speechSynthesis.speaking) playLessonAudio();
     }
 
     // ==================== TEACHER HOMEWORK BUILDER ====================
