@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#030712" />
+  <title>APEX Scholar | Secondary & Teacher Classroom Suite</title>
+  <meta name="description" content="All-in-one Secondary School Study Hub, Offline Audio Revision Reader, Focus Timer, and Teacher Homework Code Generator." />
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    body { -webkit-tap-highlight-color: transparent; background-color: #030712; color: #f3f4f6; }
+    .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border: 1px solid rgba(99, 102, 241, 0.25); }
+    .tab-active { background: #4f46e5; color: #ffffff; border-color: #6366f1; }
+    canvas { touch-action: none; }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white pb-20">
+
+  <!-- Top Header & Role Switcher -->
+  <header class="sticky top-0 z-30 glass border-b border-slate-800 px-4 py-3">
+    <div class="max-w-2xl mx-auto flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-indigo-600/30">
+          <i class="fa-solid fa-graduation-cap text-white text-base"></i>
+        </div>
+        <div>
+          <h1 class="text-sm font-black tracking-wide text-white leading-none">APEX SCHOLAR</h1>
+          <span class="text-[10px] text-indigo-300 font-medium">Secondary & Classroom Suite</span>
+        </div>
+      </div>
+
+      <!-- Student / Teacher Toggle -->
+      <div class="flex bg-slate-900 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+        <button id="roleStudentBtn" onclick="switchRole('student')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition">
+          <i class="fa-solid fa-user-graduate mr-1"></i>Student
+        </button>
+        <button id="roleTeacherBtn" onclick="switchRole('teacher')" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+          <i class="fa-solid fa-chalkboard-user mr-1"></i>Teacher
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 w-full max-w-2xl mx-auto p-4 space-y-5">
+
+    <!-- ==================== STUDENT VIEW ==================== -->
+    <div id="studentView" class="space-y-5">
+      
+      <!-- Navigation Pills -->
+      <div class="grid grid-cols-3 gap-2">
+        <button onclick="switchStudentTab('courses')" id="tab-courses" class="tab-active py-2.5 px-3 rounded-xl border border-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-book-open"></i> Courses & Audio
+        </button>
+        <button onclick="switchStudentTab('homework')" id="tab-homework" class="bg-slate-900 text-gray-300 py-2.5 px-3 rounded-xl border border-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-file-pen"></i> Homework
+        </button>
+        <button onclick="switchStudentTab('tools')" id="tab-tools" class="bg-slate-900 text-gray-300 py-2.5 px-3 rounded-xl border border-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition">
+          <i class="fa-solid fa-stopwatch"></i> Focus & Pad
+        </button>
+      </div>
+
+      <!-- SUB-TAB 1: COURSES & AUDIO READER -->
+      <section id="sec-courses" class="space-y-4">
+        <!-- Subject Filter -->
+        <div class="flex gap-2 overflow-x-auto pb-1">
+          <button onclick="filterLessons('All')" class="subj-btn px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0">All Subjects</button>
+          <button onclick="filterLessons('Mathematics')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Mathematics</button>
+          <button onclick="filterLessons('Science')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Science</button>
+          <button onclick="filterLessons('English')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">English</button>
+          <button onclick="filterLessons('History')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">History</button>
+        </div>
+
+        <!-- Audio Lesson Player Card -->
+        <div class="glass rounded-2xl p-4 space-y-3 border-indigo-500/40">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <span id="lessonSubjectTag" class="px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase">Mathematics</span>
+              <h2 id="lessonTitle" class="text-base font-black text-white mt-1">Quadratic Equations & Discriminants</h2>
+            </div>
+            <span id="audioStatus" class="text-[10px] px-2 py-1 rounded-md bg-slate-900 text-emerald-400 border border-slate-800 font-mono">READY</span>
+          </div>
+
+          <div id="lessonBody" class="text-xs text-gray-300 leading-relaxed bg-slate-950/70 p-3.5 rounded-xl border border-slate-800/80 max-h-48 overflow-y-auto">
+            A quadratic equation takes the standard form ax squared plus bx plus c equals zero, where a is not equal to zero. The discriminant, calculated as b squared minus 4ac, determines the nature of the roots. When the discriminant is positive, there are two distinct real solutions. When it equals zero, there is exactly one repeated real root. When negative, the solutions are complex conjugates.
+          </div>
+
+          <!-- Audio Controls -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+            <div class="flex items-center gap-2">
+              <button onclick="playLessonAudio()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-play"></i> Listen
+              </button>
+              <button onclick="pauseResumeAudio()" id="pauseBtn" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition">
+                <i class="fa-solid fa-pause"></i>
+              </button>
+              <button onclick="stopLessonAudio()" class="px-3 py-2 rounded-xl bg-rose-950/60 border border-rose-800/50 text-rose-300 text-xs font-bold transition">
+                <i class="fa-solid fa-stop"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
+              <span class="text-[10px] text-gray-400 px-1.5">Speed:</span>
+              <button onclick="setRate(0.75)" class="rate-btn px-2 py-1 rounded-lg text-[10px] font-bold text-gray-400">0.75x</button>
+              <button onclick="setRate(1.0)" class="rate-btn px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-600 text-white">1.0x</button>
+              <button onclick="setRate(1.25)" class="rate-btn px-2 py-1 rounded-lg text-[10px] font-bold text-gray-400">1.25x</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Course Curriculum List -->
+        <div id="lessonList" class="space-y-2.5"></div>
+      </section>
+
+      <!-- SUB-TAB 2: STUDENT HOMEWORK PORTAL -->
+      <section id="sec-homework" class="hidden space-y-4">
+        <div class="glass rounded-2xl p-4 space-y-3">
+          <h2 class="text-sm font-black text-white flex items-center gap-2">
+            <i class="fa-solid fa-key text-amber-400"></i> Enter Teacher Classroom Code
+          </h2>
+          <p class="text-xs text-gray-400">Paste the assignment code shared by your teacher to unlock your homework quiz.</p>
+          <textarea id="studentCodeInput" rows="3" placeholder="Paste APEX-HW-... code here" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-white font-mono focus:outline-none focus:border-indigo-500"></textarea>
+          <div class="flex gap-2">
+            <button onclick="loadHomeworkFromCode()" class="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+              Unlock Assignment
+            </button>
+            <button onclick="loadDemoHomework()" class="px-3 py-2.5 rounded-xl bg-slate-800 text-gray-300 text-xs font-bold hover:text-white transition">
+              Try Sample Quiz
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Quiz Workspace -->
+        <div id="activeQuizBox" class="hidden glass rounded-2xl p-4 space-y-4 border-emerald-500/30">
+          <div class="flex justify-between items-start border-b border-slate-800 pb-3">
+            <div>
+              <span id="quizSubjectBadge" class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300">Subject</span>
+              <h3 id="quizTitleDisplay" class="text-base font-black text-white mt-1">Assignment Title</h3>
+              <p id="quizDeadlineDisplay" class="text-[11px] text-amber-400 mt-0.5">Due: —</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 mb-1">Student Full Name / ID</label>
+            <input id="studentNameInput" type="text" placeholder="e.g., Nguyen Minh Anh - Class 10A2" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+          </div>
+
+          <div id="quizQuestionsContainer" class="space-y-4"></div>
+
+          <button onclick="submitHomework()" class="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black tracking-wide transition">
+            SUBMIT HOMEWORK & GENERATE RECEIPT
+          </button>
+        </div>
+
+        <!-- Verified Receipt Output -->
+        <div id="receiptBox" class="hidden glass rounded-2xl p-4 space-y-3 border-amber-500/40 bg-slate-900/90">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-black text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>VERIFIED SCORE RECEIPT</span>
+            <button onclick="copyReceipt()" class="px-3 py-1 rounded-lg bg-indigo-600 text-white text-[11px] font-bold">
+              <i class="fa-solid fa-copy mr-1"></i>Copy Receipt
+            </button>
+          </div>
+          <pre id="receiptText" class="text-[11px] font-mono text-gray-200 bg-slate-950 p-3 rounded-xl border border-slate-800 whitespace-pre-wrap"></pre>
+        </div>
+      </section>
+
+      <!-- SUB-TAB 3: FOCUS TIMER & SCRATCHPAD -->
+      <section id="sec-tools" class="hidden space-y-4">
+        <!-- Pomodoro Study Timer -->
+        <div class="glass rounded-2xl p-4 text-center space-y-3">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-300">Exam & Study Focus Timer</span>
+          <div id="timerDisplay" class="text-4xl font-black font-mono text-white tracking-widest">25:00</div>
+          <div class="flex justify-center gap-2">
+            <button onclick="startTimer()" class="px-4 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold"><i class="fa-solid fa-play mr-1"></i>Start</button>
+            <button onclick="pauseTimer()" class="px-4 py-2 rounded-xl bg-slate-800 text-white text-xs font-bold"><i class="fa-solid fa-pause mr-1"></i>Pause</button>
+            <button onclick="resetTimer(25)" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-gray-300 text-xs font-bold">25m</button>
+            <button onclick="resetTimer(45)" class="px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-gray-300 text-xs font-bold">45m</button>
+          </div>
+        </div>
+
+        <!-- Math & Notes Scratchpad -->
+        <div class="glass rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-white"><i class="fa-solid fa-pen-nib text-cyan-400 mr-1.5"></i>Equation & Diagram Scratchpad</span>
+            <button onclick="clearCanvas()" class="px-2.5 py-1 rounded-lg bg-rose-950/60 border border-rose-800/50 text-rose-300 text-[11px] font-bold">Clear</button>
+          </div>
+          <canvas id="scratchpad" class="w-full h-56 bg-slate-950 rounded-xl border border-slate-800 cursor-crosshair"></canvas>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==================== TEACHER PORTAL VIEW ==================== -->
+    <div id="teacherView" class="hidden space-y-4">
+      <div class="glass rounded-2xl p-4 space-y-3 border-cyan-500/30">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-black text-white"><i class="fa-solid fa-chalkboard-user text-cyan-400 mr-1.5"></i>Teacher Homework Builder</h2>
+          <span class="text-[10px] px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold">ZERO-SERVER SYNC</span>
+        </div>
+        <p class="text-xs text-gray-400">Build a custom classroom assignment and generate a compact code to share via Zalo, WhatsApp, or Telegram.</p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 mb-1">Subject</label>
+            <select id="hwSubject" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+              <option>Mathematics</option>
+              <option>Physics & Chemistry</option>
+              <option>Biology</option>
+              <option>English & Literature</option>
+              <option>History & Geography</option>
+              <option>Computer Science</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-[11px] font-bold text-gray-400 mb-1">Due Date / Deadline</label>
+            <input id="hwDeadline" type="text" placeholder="e.g., Friday 5:00 PM" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold text-gray-400 mb-1">Assignment Title</label>
+          <input id="hwTitle" type="text" placeholder="e.g., Chapter 4: Quadratic Functions Quiz" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white">
+        </div>
+
+        <!-- Question Builder -->
+        <div class="border-t border-slate-800 pt-3 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-indigo-300">Questions (<span id="qCount">0</span>)</span>
+            <button onclick="addQuestionField()" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold">
+              <i class="fa-solid fa-plus mr-1"></i>Add Question
+            </button>
+          </div>
+          <div id="teacherQuestionsList" class="space-y-3"></div>
+        </div>
+
+        <button onclick="generateHomeworkCode()" class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white text-xs font-black tracking-wide shadow-lg">
+          GENERATE CLASSROOM HOMEWORK CODE
+        </button>
+      </div>
+
+      <!-- Generated Code Output -->
+      <div id="generatedCodeBox" class="hidden glass rounded-2xl p-4 space-y-2.5 border-emerald-500/40">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-black text-emerald-400">SHAREABLE ASSIGNMENT CODE</span>
+          <button onclick="copyHomeworkCode()" class="px-3 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold">
+            <i class="fa-solid fa-copy mr-1"></i>Copy Code
+          </button>
+        </div>
+        <textarea id="generatedCodeOutput" rows="3" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-[11px] font-mono text-emerald-300"></textarea>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Bottom Footer -->
+  <footer class="fixed bottom-0 inset-x-0 glass border-t border-slate-800 py-2.5 px-4 text-center text-[10px] text-gray-400 z-20">
+    APEX SCHOLAR v1.0 · APEX MOBILITY SYSTEM · Offline Audio & Classroom Engine
+  </footer>
+
+  <script>
+    // ==================== CURRICULUM DATA ====================
+    const lessons = [
+      {
+        id: 1,
+        subject: "Mathematics",
+        title: "Quadratic Equations & Discriminants",
+        duration: "3 min audio",
+        body: "A quadratic equation takes the standard form ax squared plus bx plus c equals zero, where a is not equal to zero. The discriminant, calculated as b squared minus 4ac, determines the nature of the roots. When the discriminant is positive, there are two distinct real solutions. When it equals zero, there is exactly one repeated real root. When negative, the solutions are complex conjugates."
+      },
+      {
+        id: 2,
+        subject: "Science",
+        title: "Newton's Three Laws of Motion",
+        duration: "4 min audio",
+        body: "First Law: An object at rest remains at rest, and an object in motion continues in uniform motion unless acted upon by a net external force. Second Law: Acceleration is directly proportional to net force and inversely proportional to mass, expressed as F equals m times a. Third Law: For every action force, there is an equal and opposite reaction force."
+      },
+      {
+        id: 3,
+        subject: "English",
+        title: "Persuasive Essay & Rhetorical Structure",
+        duration: "3 min audio",
+        body: "An effective persuasive essay relies on three rhetorical pillars: Ethos, establishing credibility; Pathos, appealing to audience emotion; and Logos, using logical evidence and statistics. Begin with a clear thesis statement, develop each body paragraph with a topic sentence and concrete proof, and address counterarguments before concluding."
+      },
+      {
+        id: 4,
+        subject: "History",
+        title: "The Industrial Revolution & Urbanization",
+        duration: "3 min audio",
+        body: "Beginning in late eighteenth-century Britain, the Industrial Revolution transitioned economies from agrarian handcraft production to mechanized factory manufacturing. Steam power, textile machinery, and railways accelerated global trade while driving rapid urban population growth and major social reforms."
+      }
+    ];
+
+    let currentSpeechRate = 1.0;
+    let currentUtterance = null;
+    let activeQuizData = null;
+    let timerInterval = null;
+    let timeLeftSeconds = 25 * 60;
+
+    // ==================== ROLE & TAB SWITCHING ====================
+    function switchRole(role) {
+      stopLessonAudio();
+      const isStudent = role === 'student';
+      document.getElementById('studentView').classList.toggle('hidden', !isStudent);
+      document.getElementById('teacherView').classList.toggle('hidden', isStudent);
+      
+      document.getElementById('roleStudentBtn').className = isStudent
+        ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition'
+        : 'px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition';
+      document.getElementById('roleTeacherBtn').className = !isStudent
+        ? 'px-3 py-1.5 rounded-lg bg-cyan-600 text-white transition'
+        : 'px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition';
+    }
+
+    function switchStudentTab(tab) {
+      ['courses', 'homework', 'tools'].forEach(t => {
+        document.getElementById('sec-' + t).classList.toggle('hidden', t !== tab);
+        const btn = document.getElementById('tab-' + t);
+        btn.className = (t === tab)
+          ? 'tab-active py-2.5 px-3 rounded-xl border border-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition'
+          : 'bg-slate-900 text-gray-300 py-2.5 px-3 rounded-xl border border-slate-800 text-xs font-bold flex items-center justify-center gap-1.5 transition';
+      });
+      if (tab === 'tools') resizeCanvas();
+    }
+
+    // ==================== COURSES & AUDIO ENGINE ====================
+    function filterLessons(subject) {
+      document.querySelectorAll('.subj-btn').forEach(btn => {
+        const match = btn.textContent.includes(subject) || (subject === 'All' && btn.textContent.includes('All'));
+        btn.className = match
+          ? 'subj-btn px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0'
+          : 'subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0';
+      });
+
+      const list = document.getElementById('lessonList');
+      list.innerHTML = '';
+      const filtered = subject === 'All' ? lessons : lessons.filter(l => l.subject === subject);
+
+      filtered.forEach(lesson => {
+        const card = document.createElement('div');
+        card.className = 'glass rounded-xl p-3.5 flex items-center justify-between cursor-pointer hover:border-indigo-500/60 transition';
+        card.onclick = () => selectLesson(lesson);
+        card.innerHTML = `
+          <div class="min-w-0 pr-3">
+            <span class="text-[10px] font-bold text-indigo-400 uppercase">${lesson.subject}</span>
+            <h3 class="text-xs font-bold text-white truncate">${lesson.title}</h3>
+            <span class="text-[10px] text-gray-400"><i class="fa-solid fa-headphones mr-1"></i>${lesson.duration}</span>
+          </div>
+          <div class="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-volume-high text-xs"></i>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function selectLesson(lesson) {
+      stopLessonAudio();
+      document.getElementById('lessonSubjectTag').textContent = lesson.subject;
+      document.getElementById('lessonTitle').textContent = lesson.title;
+      document.getElementById('lessonBody').textContent = lesson.body;
+      document.getElementById('audioStatus').textContent = 'READY';
+    }
+
+    function playLessonAudio() {
+      if (!('speechSynthesis' in window)) {
+        alert('Text-to-Speech is not supported on this browser.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      const text = document.getElementById('lessonTitle').textContent + '. ' + document.getElementById('lessonBody').textContent;
+      currentUtterance = new SpeechSynthesisUtterance(text);
+      currentUtterance.rate = currentSpeechRate;
+      currentUtterance.onstart = () => document.getElementById('audioStatus').textContent = 'PLAYING';
+      currentUtterance.onend = () => document.getElementById('audioStatus').textContent = 'COMPLETED';
+      window.speechSynthesis.speak(currentUtterance);
+    }
+
+    function pauseResumeAudio() {
+      if (!('speechSynthesis' in window)) return;
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+        document.getElementById('audioStatus').textContent = 'PLAYING';
+      } else if (window.speechSynthesis.speaking) {
+        window.speechSynthesis.pause();
+        document.getElementById('audioStatus').textContent = 'PAUSED';
+      }
+    }
+
+    function stopLessonAudio() {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      document.getElementById('audioStatus').textContent = 'STOPPED';
+    }
+
+    function setRate(rate) {
+      currentSpeechRate = rate;
+      document.querySelectorAll('.rate-btn').forEach(btn => {
+        btn.className = parseFloat(btn.textContent) === rate
+          ? 'rate-btn px-2 py-1 rounded-lg text-[10px] font-bold bg-indigo-600 text-white'
+          : 'rate-btn px-2 py-1 rounded-lg text-[10px] font-bold text-gray-400';
+      });
+      if (window.speechSynthesis && window.speechSynthesis.speaking) playLessonAudio();
+    }
+
+    // ==================== TEACHER HOMEWORK BUILDER ====================
+    function addQuestionField(defaultQ = '', defaultA = '', defaultB = '', defaultC = '', defaultAns = 'A') {
+      const container = document.getElementById('teacherQuestionsList');
+      const idx = container.children.length + 1;
+      const div = document.createElement('div');
+      div.className = 'bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 q-block';
+      div.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="text-[11px] font-bold text-cyan-400">Question #${idx}</span>
+          <button onclick="this.parentElement.parentElement.remove(); updateQCount();" class="text-[10px] text-rose-400">Remove</button>
+        </div>
+        <input type="text" value="${defaultQ}" placeholder="Enter question prompt..." class="q-text w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-white">
+        <div class="grid grid-cols-3 gap-1.5">
+          <input type="text" value="${defaultA}" placeholder="Option A" class="q-optA bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-[11px] text-white">
+          <input type="text" value="${defaultB}" placeholder="Option B" class="q-optB bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-[11px] text-white">
+          <input type="text" value="${defaultC}" placeholder="Option C" class="q-optC bg-slate-900 border border-slate-800 rounded-lg px-2 py-1.5 text-[11px] text-white">
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-[10px] text-gray-400">Correct Answer:</span>
+          <select class="q-ans bg-slate-900 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-emerald-400 font-bold">
+            <option value="A" ${defaultAns==='A'?'selected':''}>Option A</option>
+            <option value="B" ${defaultAns==='B'?'selected':''}>Option B</option>
+            <option value="C" ${defaultAns==='C'?'selected':''}>Option C</option>
+          </select>
+        </div>
+      `;
+      container.appendChild(div);
+      updateQCount();
+    }
+
+    function updateQCount() {
+      document.getElementById('qCount').textContent = document.getElementById('teacherQuestionsList').children.length;
+    }
+
+    function generateHomeworkCode() {
+      const title = document.getElementById('hwTitle').value.trim() || 'Class Assignment';
+      const subject = document.getElementById('hwSubject').value;
+      const deadline = document.getElementById('hwDeadline').value.trim() || 'Next Class';
+      const blocks = document.querySelectorAll('.q-block');
+      
+      if (blocks.length === 0) {
+        alert('Please add at least one question.');
+        return;
+      }
+
+      const questions = [];
+      blocks.forEach(b => {
+        questions.push({
+          q: b.querySelector('.q-text').value.trim() || 'Untitled Question',
+          a: b.querySelector('.q-optA').value.trim() || 'A',
+          b: b.querySelector('.q-optB').value.trim() || 'B',
+          c: b.querySelector('.q-optC').value.trim() || 'C',
+          ans: b.querySelector('.q-ans').value
+        });
+      });
+
+      const payload = { s: subject, t: title, d: deadline, q: questions };
+      const encoded = 'APEX-HW-' + btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
+      
+      document.getElementById('generatedCodeOutput').value = encoded;
+      document.getElementById('generatedCodeBox').classList.remove('hidden');
+    }
+
+    function copyHomeworkCode() {
+      const box = document.getElementById('generatedCodeOutput');
+      box.select();
+      navigator.clipboard.writeText(box.value);
+      alert('Classroom Homework Code copied! Share it with your students.');
+    }
+
+    // ==================== STUDENT HOMEWORK DECODER ====================
+    function loadDemoHomework() {
+      const demo = {
+        s: "Mathematics",
+        t: "Algebra & Discriminant Check",
+        d: "Friday 5:00 PM",
+        q: [
+          { q: "What is the discriminant of ax² + bx + c = 0?", a: "b² - 4ac", b: "b² + 4ac", c: "2a / -b", ans: "A" },
+          { q: "If the discriminant is negative, how many real roots exist?", a: "Two", b: "Zero", c: "One", ans: "B" }
+        ]
+      };
+      document.getElementById('studentCodeInput').value = 'APEX-HW-' + btoa(unescape(encodeURIComponent(JSON.stringify(demo))));
+      loadHomeworkFromCode();
+    }
+
+    function loadHomeworkFromCode() {
+      const raw = document.getElementById('studentCodeInput').value.trim();
+      if (!raw.startsWith('APEX-HW-')) {
+        alert('Invalid code format. Make sure it starts with APEX-HW-');
+        return;
+      }
+      try {
+        const jsonStr = decodeURIComponent(escape(atob(raw.replace('APEX-HW-', ''))));
+        activeQuizData = JSON.parse(jsonStr);
+        renderStudentQuiz(activeQuizData);
+      } catch (e) {
+        alert('Could not decode homework. Please check that the full code was pasted.');
+      }
+    }
+
+    function renderStudentQuiz(data) {
+      document.getElementById('quizSubjectBadge').textContent = data.s;
+      document.getElementById('quizTitleDisplay').textContent = data.t;
+      document.getElementById('quizDeadlineDisplay').textContent = 'Due: ' + data.d;
+      
+      const container = document.getElementById('quizQuestionsContainer');
+      container.innerHTML = '';
+
+      data.q.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2';
+        div.innerHTML = `
+          <p class="text-xs font-bold text-white">${index + 1}. ${item.q}</p>
+          <div class="space-y-1.5 text-xs">
+            <label class="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer">
+              <input type="radio" name="stu_q_${index}" value="A" class="accent-indigo-500"> <span>A) ${item.a}</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer">
+              <input type="radio" name="stu_q_${index}" value="B" class="accent-indigo-500"> <span>B) ${item.b}</span>
+            </label>
+            <label class="flex items-center gap-2 p-2 rounded-lg bg-slate-900 border border-slate-800 cursor-pointer">
+              <input type="radio" name="stu_q_${index}" value="C" class="accent-indigo-500"> <span>C) ${item.c}</span>
+            </label>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+
+      document.getElementById('activeQuizBox').classList.remove('hidden');
+      document.getElementById('receiptBox').classList.add('hidden');
+    }
+
+    function submitHomework() {
+      if (!activeQuizData) return;
+      const studentName = document.getElementById('studentNameInput').value.trim() || 'Anonymous Student';
+      let score = 0;
+
+      activeQuizData.q.forEach((item, idx) => {
+        const selected = document.querySelector(`input[name="stu_q_${idx}"]:checked`);
+        if (selected && selected.value === item.ans) score++;
+      });
+
+      const total = activeQuizData.q.length;
+      const pct = Math.round((score / total) * 100);
+      const timestamp = new Date().toLocaleString();
+      const verifyHash = btoa(`${studentName}|${score}/${total}|${timestamp}`).slice(0, 12).toUpperCase();
+
+      const receipt = `=== APEX SCHOLAR HOMEWORK RECEIPT ===
+Student: ${studentName}
+Subject: ${activeQuizData.s}
+Assignment: ${activeQuizData.t}
+Score: ${score} / ${total} (${pct}%)
+Completed: ${timestamp}
+Verification ID: #${verifyHash}`;
+
+      document.getElementById('receiptText').textContent = receipt;
+      document.getElementById('receiptBox').classList.remove('hidden');
+    }
+
+    function copyReceipt() {
+      navigator.clipboard.writeText(document.getElementById('receiptText').textContent);
+      alert('Score Receipt copied! Send this to your teacher.');
+    }
+
+    // ==================== FOCUS TIMER ====================
+    function updateTimerUI() {
+      const m = String(Math.floor(timeLeftSeconds / 60)).padStart(2, '0');
+      const s = String(timeLeftSeconds % 60).padStart(2, '0');
+      document.getElementById('timerDisplay').textContent = `${m}:${s}`;
+    }
+
+    function startTimer() {
+      if (timerInterval) return;
+      timerInterval = setInterval(() => {
+        if (timeLeftSeconds > 0) {
+          timeLeftSeconds--;
+          updateTimerUI();
+        } else {
+          pauseTimer();
+          alert('Study session complete! Take a short break.');
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function resetTimer(mins) {
+      pauseTimer();
+      timeLeftSeconds = mins * 60;
+      updateTimerUI();
+    }
+
+    // ==================== SCRATCHPAD CANVAS ====================
+    const canvas = document.getElementById('scratchpad');
+    const ctx = canvas.getContext('2d');
+    let drawing = false;
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width > 0) {
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        ctx.strokeStyle = '#38bdf8';
+        ctx.lineWidth = 2.5;
+        ctx.lineCap = 'round';
+      }
+    }
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    }
+
+    canvas.addEventListener('mousedown', e => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); });
+    canvas.addEventListener('mousemove', e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); });
+    window.addEventListener('mouseup', () => drawing = false);
+
+    canvas.addEventListener('touchstart', e => { drawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); }, { passive: true });
+    canvas.addEventListener('touchmove', e => { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }, { passive: true });
+    window.addEventListener('touchend', () => drawing = false);
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Initialize defaults
+    filterLessons('All');
+    addQuestionField('Solve for x: 2x + 6 = 14', 'x = 4', 'x = 10', 'x = 3', 'A');
+  </script>
+</body>
+</html>
