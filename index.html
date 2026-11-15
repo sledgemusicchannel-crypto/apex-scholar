@@ -59,13 +59,39 @@
           <button id="roleStudentBtn" onclick="switchRole('student')" class="px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition">
             <i class="fa-solid fa-user-graduate mr-1"></i>Student
           </button>
-          <button id="roleTeacherBtn" onclick="switchRole('teacher')" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+          <button id="roleTeacherBtn" onclick="requestTeacherAccess()" class="px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
             <i class="fa-solid fa-chalkboard-user mr-1"></i>Teacher
           </button>
         </div>
       </div>
     </div>
   </header>
+
+  <!-- Teacher PIN Verification Modal -->
+  <div id="pinModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="glass w-full max-w-sm rounded-2xl p-5 space-y-4 border-cyan-500/40 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-black text-white flex items-center gap-2">
+          <i class="fa-solid fa-shield-halved text-cyan-400"></i> Teacher Access Portal
+        </h3>
+        <button onclick="closePinModal()" class="text-gray-400 hover:text-white text-xs"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <p id="pinModalDesc" class="text-xs text-gray-400">Enter your secure 4-digit teacher administrator PIN to access the builder and student inbox.</p>
+      
+      <div>
+        <input id="teacherPinInput" type="password" maxlength="6" placeholder="Enter PIN (Default: 1988)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-center text-sm text-white font-mono tracking-widest focus:outline-none focus:border-cyan-500">
+      </div>
+
+      <div class="flex gap-2">
+        <button onclick="verifyTeacherPin()" class="flex-1 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold transition">
+          Unlock Portal
+        </button>
+        <button onclick="resetTeacherPinPrompt()" class="px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-gray-400 hover:text-white text-xs font-bold transition" title="Set/Change PIN">
+          Set PIN
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Main Workspace -->
   <main class="flex-1 w-full max-w-2xl mx-auto p-4 space-y-5">
@@ -220,6 +246,11 @@
 
     <!-- ==================== TEACHER PORTAL VIEW ==================== -->
     <div id="teacherView" class="hidden space-y-4">
+      <div class="flex justify-between items-center bg-slate-900/90 border border-slate-800 p-3 rounded-2xl">
+        <span class="text-xs text-cyan-300 font-bold"><i class="fa-solid fa-lock-open mr-1"></i>Teacher Admin Mode Active</span>
+        <button onclick="switchRole('student')" class="px-3 py-1.5 rounded-xl bg-slate-800 text-gray-300 text-xs font-bold hover:text-white">Exit to Student View</button>
+      </div>
+
       <div class="glass rounded-2xl p-4 space-y-3 border-cyan-500/30">
         <div class="flex items-center justify-between">
           <h2 class="text-sm font-black text-white"><i class="fa-solid fa-chalkboard-user text-cyan-400 mr-1.5"></i>Teacher Homework Builder</h2>
@@ -426,7 +457,7 @@
         { id: 10, subject: "English & Literature", title: "説得力のあるエッセイと修辞構造", duration: "3分で読む", body: "効果的な説得力のあるエッセイは、理由と証拠に裏付けられた明確な立場を提示します。" },
         { id: 11, subject: "English & Literature", title: "読解力スキル", duration: "3分で読む", body: "効果的な読解には、主旨の特定、支持詳細の把握、文脈での語彙理解が含まれます。" },
         { id: 12, subject: "History & Geography", title: "産業革命と都市化", duration: "3分で読む", body: "18世紀後半のイギリスに始まった産業革命は、生産を手工業から機械化された工場製造へと変えました。" },
-        { id: 13, subject: "History & Geography", title: "地図、縮尺、地理座標", duration: "3分で読む", body: "地図は地表の場所や特徴を表現します。縮尺は地図上の距離と実際の地上距離を比較します。" },
+        { id: 13, subject: "History & Geography", title: "地図、縮尺、地理座標", duration: "3分で読む", body: "地図は地表の場所や特徴を表現します。地図は地図上の距離と実際の地上距離を比較します。" },
         { id: 14, subject: "Computer Science", title: "アルゴリズムとフローチャート", duration: "3分で読む", body: "アルゴリズムは問題を解決するための明確なステップの有限のシーケンスです。" },
         { id: 15, subject: "Computer Science", title: "インターネットの安全とデジタルシティズンシップ", duration: "3分で読む", body: "デジタルシティズンシップとは、テクノロジーを責任を持って安全に使用することを意味します。" }
       ]
@@ -452,6 +483,50 @@
       }
     }
 
+    // ==================== SECURITY & PIN LOCK LOGIC ====================
+    function requestTeacherAccess() {
+      // Check if a PIN is already stored, otherwise initialize default '1988'
+      if (!localStorage.getItem('apex_teacher_pin')) {
+        localStorage.setItem('apex_teacher_pin', '1988');
+      }
+      document.getElementById('pinModal').classList.remove('hidden');
+      document.getElementById('teacherPinInput').value = '';
+      document.getElementById('teacherPinInput').focus();
+    }
+
+    function closePinModal() {
+      document.getElementById('pinModal').classList.add('hidden');
+    }
+
+    function verifyTeacherPin() {
+      const enteredPin = document.getElementById('teacherPinInput').value.trim();
+      const savedPin = localStorage.getItem('apex_teacher_pin') || '1988';
+
+      if (enteredPin === savedPin) {
+        closePinModal();
+        switchRole('teacher');
+      } else {
+        alert("❌ Incorrect Teacher PIN. Access denied.");
+        document.getElementById('teacherPinInput').value = '';
+      }
+    }
+
+    function resetTeacherPinPrompt() {
+      const currentPin = localStorage.getItem('apex_teacher_pin') || '1988';
+      const verification = prompt("Enter current Teacher PIN to change it:");
+      if (verification === currentPin) {
+        const newPin = prompt("Enter your new secure Teacher PIN:");
+        if (newPin && newPin.trim().length >= 4) {
+          localStorage.setItem('apex_teacher_pin', newPin.trim());
+          alert("✅ Teacher PIN updated successfully!");
+        } else {
+          alert("PIN must be at least 4 characters long.");
+        }
+      } else if (verification !== null) {
+        alert("Incorrect current PIN.");
+      }
+    }
+
     // ==================== ROLE & TAB SWITCHING ====================
     function switchRole(role) {
       stopLessonAudio();
@@ -461,9 +536,6 @@
       
       document.getElementById('roleStudentBtn').className = isStudent
         ? 'px-3 py-1.5 rounded-lg bg-indigo-600 text-white transition'
-        : 'px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition';
-      document.getElementById('roleTeacherBtn').className = !isStudent
-        ? 'px-3 py-1.5 rounded-lg bg-cyan-600 text-white transition'
         : 'px-3 py-1.5 rounded-lg text-gray-400 hover:text-white transition';
     }
 
@@ -786,7 +858,6 @@ HASH: ${utf8ToBase64(studentName + score + timestamp).slice(0, 16).toUpperCase()
         return;
       }
 
-      // Parse student name, assignment, and score from text block
       try {
         const studentMatch = text.match(/Student:\s*(.+)/);
         const assignMatch = text.match(/Assignment:\s*(.+)/);
@@ -803,7 +874,6 @@ HASH: ${utf8ToBase64(studentName + score + timestamp).slice(0, 16).toUpperCase()
           raw: text
         };
 
-        // Avoid duplicate exact submissions
         teacherInbox.unshift(submissionItem);
         document.getElementById('teacherReceiptInput').value = '';
         renderTeacherInbox();
