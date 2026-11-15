@@ -17,6 +17,16 @@
     ::-webkit-scrollbar { width: 4px; height: 4px; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
+
+  <!-- ResponsiveVoice online narration. Replace the placeholder with your own site-activated API key. -->
+  <script src="https://cdn.responsivevoice.org/sdk/latest/responsivevoice.js"></script>
+  <script>
+    window.addEventListener('load', function () {
+      if (window.responsiveVoice && typeof responsiveVoice.init === 'function') {
+        responsiveVoice.init({ apiKey: 'YOUR_RESPONSIVEVOICE_API_KEY' });
+      }
+    });
+  </script>
 </head>
 <body class="min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white pb-20">
 
@@ -70,9 +80,11 @@
         <div class="flex gap-2 overflow-x-auto pb-1">
           <button onclick="filterLessons('All')" class="subj-btn px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold shrink-0">All Subjects</button>
           <button onclick="filterLessons('Mathematics')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Mathematics</button>
-          <button onclick="filterLessons('Science')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Science</button>
-          <button onclick="filterLessons('English')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">English</button>
-          <button onclick="filterLessons('History')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">History</button>
+          <button onclick="filterLessons('Physics & Chemistry')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Physics & Chemistry</button>
+          <button onclick="filterLessons('Biology')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Biology</button>
+          <button onclick="filterLessons('English & Literature')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">English & Literature</button>
+          <button onclick="filterLessons('History & Geography')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">History & Geography</button>
+          <button onclick="filterLessons('Computer Science')" class="subj-btn px-3 py-1.5 rounded-lg bg-slate-900 text-gray-400 border border-slate-800 text-xs font-bold shrink-0">Computer Science</button>
         </div>
 
         <!-- Audio Lesson Player Card -->
@@ -264,34 +276,21 @@
   <script>
     // ==================== CURRICULUM & LESSON DATA ====================
     const lessons = [
-      {
-        id: 1,
-        subject: "Mathematics",
-        title: "Quadratic Equations & Discriminants",
-        duration: "3 min audio",
-        body: "A quadratic equation takes the standard form ax squared plus bx plus c equals zero, where a is not equal to zero. The discriminant, calculated as b squared minus 4ac, determines the nature of the roots. When the discriminant is positive, there are two distinct real solutions. When it equals zero, there is exactly one repeated real root. When negative, the solutions are complex conjugates."
-      },
-      {
-        id: 2,
-        subject: "Science",
-        title: "Newton's Three Laws of Motion",
-        duration: "4 min audio",
-        body: "First Law: An object at rest remains at rest, and an object in motion continues in uniform motion unless acted upon by a net external force. Second Law: Acceleration is directly proportional to net force and inversely proportional to mass, expressed as F equals m times a. Third Law: For every action force, there is an equal and opposite reaction force."
-      },
-      {
-        id: 3,
-        subject: "English",
-        title: "Persuasive Essay & Rhetorical Structure",
-        duration: "3 min audio",
-        body: "An effective persuasive essay relies on three rhetorical pillars: Ethos, establishing credibility; Pathos, appealing to audience emotion; and Logos, using logical evidence and statistics. Begin with a clear thesis statement, develop each body paragraph with a topic sentence and concrete proof, and address counterarguments before concluding."
-      },
-      {
-        id: 4,
-        subject: "History",
-        title: "The Industrial Revolution & Urbanization",
-        duration: "3 min audio",
-        body: "Beginning in late eighteenth-century Britain, the Industrial Revolution transitioned economies from agrarian handcraft production to mechanized factory manufacturing. Steam power, textile machinery, and railways accelerated global trade while driving rapid urban population growth and major social reforms."
-      }
+      { id: 1, subject: "Mathematics", title: "Quadratic Equations & Discriminants", duration: "3 min read", body: "A quadratic equation takes the standard form ax squared plus bx plus c equals zero, where a is not equal to zero. The discriminant, calculated as b squared minus 4ac, determines the nature of the roots. When the discriminant is positive, there are two distinct real solutions. When it equals zero, there is exactly one repeated real root. When negative, the solutions are complex conjugates." },
+      { id: 2, subject: "Mathematics", title: "Trigonometric Ratios", duration: "3 min read", body: "In a right-angled triangle, sine is opposite over hypotenuse, cosine is adjacent over hypotenuse, and tangent is opposite over adjacent. These ratios connect an angle to the lengths of the sides. They are useful for calculating heights, distances, and unknown angles." },
+      { id: 3, subject: "Mathematics", title: "Statistics: Mean, Median & Mode", duration: "3 min read", body: "The mean is the sum of all values divided by the number of values. The median is the middle value after arranging the data in order. The mode is the value that occurs most often. These measures describe the centre of a data set in different ways." },
+      { id: 4, subject: "Physics & Chemistry", title: "Newton's Three Laws of Motion", duration: "4 min read", body: "Newton's First Law states that an object remains at rest or in uniform motion unless acted on by a net external force. The Second Law relates force, mass, and acceleration: force equals mass multiplied by acceleration. The Third Law states that every action has an equal and opposite reaction." },
+      { id: 5, subject: "Physics & Chemistry", title: "Atoms, Elements & Compounds", duration: "3 min read", body: "All matter is made of atoms. An element contains only one type of atom. A compound forms when atoms of two or more different elements are chemically bonded in a fixed ratio. Chemical symbols and formulae help us represent elements and compounds." },
+      { id: 6, subject: "Physics & Chemistry", title: "Electric Circuits & Ohm's Law", duration: "3 min read", body: "An electric circuit is a complete path through which electric current flows. Voltage is the electrical potential difference, current is the rate of flow of charge, and resistance opposes current. Ohm's Law states that voltage equals current multiplied by resistance, provided physical conditions remain constant." },
+      { id: 7, subject: "Biology", title: "Cell Structure & Function", duration: "3 min read", body: "The cell is the basic structural and functional unit of living organisms. The cell membrane controls what enters and leaves. The nucleus contains genetic material. The cytoplasm is where many chemical reactions occur. Plant cells also have a cell wall, chloroplasts, and a large permanent vacuole." },
+      { id: 8, subject: "Biology", title: "Photosynthesis", duration: "3 min read", body: "Photosynthesis is the process by which green plants use light energy to make glucose from carbon dioxide and water. Chlorophyll absorbs light energy, mainly in the leaves. Oxygen is released as a by-product. Light, water, carbon dioxide, and suitable temperature affect the rate of photosynthesis." },
+      { id: 9, subject: "Biology", title: "Human Circulatory System", duration: "3 min read", body: "The circulatory system transports substances around the body. The heart pumps blood through arteries, veins, and capillaries. Blood carries oxygen and nutrients to cells and transports carbon dioxide and other waste products away. Valves help keep blood flowing in the correct direction." },
+      { id: 10, subject: "English & Literature", title: "Persuasive Essay & Rhetorical Structure", duration: "3 min read", body: "An effective persuasive essay presents a clear position supported by reasons and evidence. Ethos establishes credibility, pathos appeals to emotion, and logos uses logic. A strong essay introduces its thesis, develops focused paragraphs, considers counterarguments, and ends with a convincing conclusion." },
+      { id: 11, subject: "English & Literature", title: "Reading Comprehension Skills", duration: "3 min read", body: "Effective reading involves identifying the main idea, locating supporting details, understanding vocabulary in context, and making inferences. Readers should distinguish facts from opinions and use evidence from the passage to support their answers." },
+      { id: 12, subject: "History & Geography", title: "The Industrial Revolution & Urbanization", duration: "3 min read", body: "Beginning in late eighteenth-century Britain, the Industrial Revolution changed production from handcraft and farming to mechanized factory manufacturing. Steam power, textile machinery, and railways expanded trade. Industrial growth also encouraged urbanization and brought major social and economic changes." },
+      { id: 13, subject: "History & Geography", title: "Maps, Scale & Geographic Coordinates", duration: "3 min read", body: "Maps represent places and features of the Earth's surface. A map scale compares distance on the map with actual ground distance. Latitude measures position north or south of the Equator, while longitude measures position east or west of the Prime Meridian." },
+      { id: 14, subject: "Computer Science", title: "Algorithms & Flowcharts", duration: "3 min read", body: "An algorithm is a finite sequence of clear steps for solving a problem. A flowchart represents an algorithm using symbols and arrows. Common symbols include an oval for start or end, a rectangle for a process, a diamond for a decision, and a parallelogram for input or output." },
+      { id: 15, subject: "Computer Science", title: "Internet Safety & Digital Citizenship", duration: "3 min read", body: "Digital citizenship means using technology responsibly, respectfully, and safely. Protect personal information, use strong unique passwords, check information before sharing it, respect copyright, and report suspicious messages. Think carefully before posting because online content can be copied and shared." }
     ];
 
     let currentSpeechRate = 1.0;
@@ -365,21 +364,96 @@
       document.getElementById('audioStatus').textContent = 'READY';
     }
 
+    let activeVoiceEngine = '';
+    let responsiveStartTimer = null;
+
     function playLessonAudio() {
-      if (!('speechSynthesis' in window)) {
-        alert('Text-to-Speech is not supported on this browser.');
+      stopLessonAudio();
+      const text = document.getElementById('lessonTitle').textContent + '. ' +
+                   document.getElementById('lessonBody').textContent;
+      document.getElementById('audioStatus').textContent = 'PREPARING VOICE';
+
+      // Preferred engine: ResponsiveVoice (online; requires an activated site/key).
+      if (window.responsiveVoice && typeof responsiveVoice.speak === 'function') {
+        const runText = text;
+        responsiveStartTimer = setTimeout(() => {
+          if (activeVoiceEngine === 'responsive') return;
+          try { responsiveVoice.cancel(); } catch (e) {}
+          startDeviceSpeech(runText);
+        }, 8000);
+
+        try {
+          responsiveVoice.speak(runText, 'UK English Female', {
+            rate: currentSpeechRate,
+            pitch: 1,
+            volume: 1,
+            onstart: () => {
+              clearTimeout(responsiveStartTimer);
+              activeVoiceEngine = 'responsive';
+              document.getElementById('audioStatus').textContent = 'PLAYING · UK VOICE';
+            },
+            onend: () => {
+              clearTimeout(responsiveStartTimer);
+              activeVoiceEngine = '';
+              document.getElementById('audioStatus').textContent = 'COMPLETED';
+            },
+            onerror: () => {
+              clearTimeout(responsiveStartTimer);
+              activeVoiceEngine = '';
+              startDeviceSpeech(runText);
+            }
+          });
+          return;
+        } catch (e) {
+          clearTimeout(responsiveStartTimer);
+        }
+      }
+
+      startDeviceSpeech(text);
+    }
+
+    function startDeviceSpeech(text) {
+      if (!('speechSynthesis' in window) ||
+          typeof SpeechSynthesisUtterance === 'undefined') {
+        document.getElementById('audioStatus').textContent = 'VOICE SERVICE UNAVAILABLE';
         return;
       }
-      window.speechSynthesis.cancel();
-      const text = document.getElementById('lessonTitle').textContent + '. ' + document.getElementById('lessonBody').textContent;
-      currentUtterance = new SpeechSynthesisUtterance(text);
-      currentUtterance.rate = currentSpeechRate;
-      currentUtterance.onstart = () => document.getElementById('audioStatus').textContent = 'PLAYING';
-      currentUtterance.onend = () => document.getElementById('audioStatus').textContent = 'COMPLETED';
-      window.speechSynthesis.speak(currentUtterance);
+      try {
+        window.speechSynthesis.cancel();
+        currentUtterance = new SpeechSynthesisUtterance(text);
+        currentUtterance.lang = 'en-GB';
+        currentUtterance.rate = currentSpeechRate;
+        currentUtterance.onstart = () => {
+          activeVoiceEngine = 'device';
+          document.getElementById('audioStatus').textContent = 'PLAYING · DEVICE VOICE';
+        };
+        currentUtterance.onend = () => {
+          activeVoiceEngine = '';
+          document.getElementById('audioStatus').textContent = 'COMPLETED';
+        };
+        currentUtterance.onerror = () => {
+          activeVoiceEngine = '';
+          document.getElementById('audioStatus').textContent = 'AUDIO PLAYBACK FAILED';
+        };
+        window.speechSynthesis.speak(currentUtterance);
+      } catch (e) {
+        document.getElementById('audioStatus').textContent = 'AUDIO PLAYBACK FAILED';
+      }
     }
 
     function pauseResumeAudio() {
+      if (activeVoiceEngine === 'responsive' && window.responsiveVoice) {
+        try {
+          if (responsiveVoice.isPlaying()) {
+            responsiveVoice.pause();
+            document.getElementById('audioStatus').textContent = 'PAUSED';
+          } else {
+            responsiveVoice.resume();
+            document.getElementById('audioStatus').textContent = 'PLAYING';
+          }
+        } catch (e) {}
+        return;
+      }
       if (!('speechSynthesis' in window)) return;
       if (window.speechSynthesis.paused) {
         window.speechSynthesis.resume();
@@ -391,7 +465,14 @@
     }
 
     function stopLessonAudio() {
+      clearTimeout(responsiveStartTimer);
+      try {
+        if (window.responsiveVoice && typeof responsiveVoice.cancel === 'function') {
+          responsiveVoice.cancel();
+        }
+      } catch (e) {}
       if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      activeVoiceEngine = '';
       document.getElementById('audioStatus').textContent = 'STOPPED';
     }
 
