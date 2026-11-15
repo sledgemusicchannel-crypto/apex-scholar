@@ -18,7 +18,7 @@
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
 
-  <!-- ResponsiveVoice online narration. Replace the placeholder with your own site-activated API key. -->
+  <!-- ResponsiveVoice online narration -->
   <script src="https://cdn.responsivevoice.org/sdk/latest/responsivevoice.js"></script>
   <script>
     window.addEventListener('load', function () {
@@ -503,7 +503,6 @@
                    document.getElementById('lessonBody').textContent;
       document.getElementById('audioStatus').textContent = 'PREPARING VOICE';
 
-      // Preferred engine: ResponsiveVoice (online; requires an activated site/key).
       if (window.responsiveVoice && typeof responsiveVoice.speak === 'function') {
         let rvVoice = 'UK English Female';
         if (currentLang === 'vi-VN') rvVoice = 'Vietnamese Female';
@@ -623,6 +622,19 @@
       });
     }
 
+    // ==================== UTF-8 SAFE ENCODING / DECODING ====================
+    function utf8ToBase64(str) {
+      return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function(match, p1) {
+        return String.fromCharCode('0x' + p1);
+      }));
+    }
+
+    function base64ToUtf8(base64) {
+      return decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+    }
+
     // ==================== HOMEWORK & QUIZ ENGINE ====================
     function loadDemoHomework() {
       activeQuizData = {
@@ -639,14 +651,18 @@
     }
 
     function loadHomeworkFromCode() {
-      const code = document.getElementById('studentCodeInput').value.trim();
-      if (!code) {
+      let rawCode = document.getElementById('studentCodeInput').value.trim();
+      if (!rawCode) {
         alert("Please enter a homework code.");
         return;
       }
       try {
-        const decoded = JSON.parse(atob(code));
-        activeQuizData = decoded;
+        // Automatically remove prefix if present
+        if (rawCode.startsWith("APEX-HW-")) {
+          rawCode = rawCode.substring(8);
+        }
+        const jsonString = base64ToUtf8(rawCode);
+        activeQuizData = JSON.parse(jsonString);
         renderQuiz();
       } catch (e) {
         alert("Invalid homework code format.");
@@ -703,7 +719,7 @@
         const userAns = selected ? parseInt(selected.value) : -1;
         const isCorrect = userAns === item.correct;
         if (isCorrect) score++;
-        details += `Q${index + 1}: ${isCorrect ? '✅ Correct' : '❌ Incorrect'}\n`;
+        details += `Q${index + 1}: ${isCorrect ? 'Correct' : 'Incorrect'}\n`;
       });
 
       const percentage = Math.round((score / total) * 100);
@@ -719,7 +735,7 @@ Score: ${score}/${total} (${percentage}%)
 Submitted: ${timestamp}
 ---------------------------------
 ${details}═════════════════════════════════
-HASH: ${btoa(studentName + score + timestamp).slice(0, 16).toUpperCase()}
+HASH: ${utf8ToBase64(studentName + score + timestamp).slice(0, 16).toUpperCase()}
 `;
 
       document.getElementById('receiptText').textContent = receipt;
@@ -801,7 +817,7 @@ HASH: ${btoa(studentName + score + timestamp).slice(0, 16).toUpperCase()}
       }
 
       const payload = { title, subject, deadline, questions: teacherQuestions };
-      const encoded = btoa(JSON.stringify(payload));
+      const encoded = utf8ToBase64(JSON.stringify(payload));
       const fullCode = "APEX-HW-" + encoded;
 
       document.getElementById('generatedCodeOutput').value = fullCode;
