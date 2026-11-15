@@ -276,6 +276,29 @@
         </div>
         <textarea id="generatedCodeOutput" rows="3" readonly class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-[11px] font-mono text-emerald-300"></textarea>
       </div>
+
+      <!-- ==================== TEACHER SUBMISSION REVIEW INBOX ==================== -->
+      <div class="glass rounded-2xl p-4 space-y-3 border-indigo-500/40">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-black text-white"><i class="fa-solid fa-inbox text-indigo-400 mr-1.5"></i>Teacher Submission Inbox</h2>
+          <button onclick="clearTeacherInbox()" class="text-[10px] text-rose-400 font-bold hover:underline">Clear Inbox</button>
+        </div>
+        <p class="text-xs text-gray-400">Paste student receipt text sent from Zalo, WhatsApp, or chat below to verify and log their grade into your review inbox.</p>
+        <textarea id="teacherReceiptInput" rows="3" placeholder="Paste student verified receipt text here..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-[11px] font-mono text-white focus:outline-none focus:border-indigo-500"></textarea>
+        <button onclick="importStudentReceipt()" class="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition">
+          Verify & Import into Inbox
+        </button>
+
+        <!-- Inbox Submissions List Table -->
+        <div class="border-t border-slate-800 pt-3 space-y-2">
+          <div class="flex justify-between items-center text-xs font-bold text-gray-300">
+            <span>Reviewed Submissions (<span id="inboxCount">0</span>)</span>
+          </div>
+          <div id="teacherInboxList" class="space-y-2 max-h-64 overflow-y-auto">
+            <p class="text-[11px] text-gray-500 italic text-center py-4">No student submissions imported yet.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -657,7 +680,6 @@
         return;
       }
       try {
-        // Automatically remove prefix if present
         if (rawCode.startsWith("APEX-HW-")) {
           rawCode = rawCode.substring(8);
         }
@@ -748,6 +770,97 @@ HASH: ${utf8ToBase64(studentName + score + timestamp).slice(0, 16).toUpperCase()
       navigator.clipboard.writeText(text).then(() => {
         alert("Receipt copied to clipboard!");
       });
+    }
+
+    // ==================== TEACHER SUBMISSION INBOX LOGIC ====================
+    let teacherInbox = [];
+
+    function importStudentReceipt() {
+      const text = document.getElementById('teacherReceiptInput').value.trim();
+      if (!text) {
+        alert("Please paste a student receipt first.");
+        return;
+      }
+      if (!text.includes("APEX SCHOLAR · VERIFIED HOMEWORK RECEIPT")) {
+        alert("Invalid receipt format. Ensure the student copied the full verified receipt block.");
+        return;
+      }
+
+      // Parse student name, assignment, and score from text block
+      try {
+        const studentMatch = text.match(/Student:\s*(.+)/);
+        const assignMatch = text.match(/Assignment:\s*(.+)/);
+        const subjectMatch = text.match(/Subject:\s*(.+)/);
+        const scoreMatch = text.match(/Score:\s*(.+)/);
+        const subMatch = text.match(/Submitted:\s*(.+)/);
+
+        const submissionItem = {
+          student: studentMatch ? studentMatch[1].trim() : "Unknown Student",
+          assignment: assignMatch ? assignMatch[1].trim() : "General Quiz",
+          subject: subjectMatch ? subjectMatch[1].trim() : "General",
+          score: scoreMatch ? scoreMatch[1].trim() : "0/0",
+          submittedAt: subMatch ? subMatch[1].trim() : new Date().toLocaleString(),
+          raw: text
+        };
+
+        // Avoid duplicate exact submissions
+        teacherInbox.unshift(submissionItem);
+        document.getElementById('teacherReceiptInput').value = '';
+        renderTeacherInbox();
+        alert("✅ Student submission verified and added to teacher inbox!");
+      } catch (e) {
+        alert("Could not parse receipt structure.");
+      }
+    }
+
+    function renderTeacherInbox() {
+      const list = document.getElementById('teacherInboxList');
+      document.getElementById('inboxCount').textContent = teacherInbox.length;
+
+      if (teacherInbox.length === 0) {
+        list.innerHTML = '<p class="text-[11px] text-gray-500 italic text-center py-4">No student submissions imported yet.</p>';
+        return;
+      }
+
+      list.innerHTML = '';
+      teacherInbox.forEach((item, idx) => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-1.5';
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 uppercase">${item.subject}</span>
+              <h3 class="text-xs font-bold text-white mt-1">${item.student}</h3>
+              <p class="text-[11px] text-gray-400">${item.assignment}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-black text-emerald-400">${item.score}</span>
+              <p class="text-[9px] text-gray-500">${item.submittedAt}</p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-1 border-t border-slate-900">
+            <button onclick="viewFullReceipt(${idx})" class="px-2.5 py-1 rounded bg-slate-900 text-indigo-300 text-[10px] font-bold hover:bg-slate-800">View Receipt</button>
+            <button onclick="deleteInboxItem(${idx})" class="px-2 py-1 rounded bg-rose-950/60 text-rose-300 text-[10px] font-bold">Remove</button>
+          </div>
+        `;
+        list.appendChild(card);
+      });
+    }
+
+    function viewFullReceipt(idx) {
+      alert("STUDENT SUBMISSION RECEIPT:\n\n" + teacherInbox[idx].raw);
+    }
+
+    function deleteInboxItem(idx) {
+      teacherInbox.splice(idx, 1);
+      renderTeacherInbox();
+    }
+
+    function clearTeacherInbox() {
+      if (confirm("Are you sure you want to clear all student submissions from your inbox?")) {
+        teacherInbox = [];
+        renderTeacherInbox();
+      }
     }
 
     // ==================== TEACHER HOMEWORK BUILDER ====================
